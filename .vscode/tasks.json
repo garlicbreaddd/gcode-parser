@@ -5,11 +5,14 @@
             "label": "C/C++: g++.exe build active file",
             "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
             "args": [
+                "-I", "C:\\GLAD\\include",
+                "-I", "C:\\GLFW\\include",
+
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
+                "${file}", "gl.c",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe", "-lcomdlg32"
+                "${fileDirname}\\${fileBasenameNoExtension}.exe", "-lcomdlg32", "-lglfw3", "-lglfw3dll", "-lopengl32"
             ],
             "options": {
                 "cwd": "${fileDirname}"

@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/GLAD/include",
+                "C:\\Users\\nihal\\OneDrive\\Desktop\\code\\gcode-visualizer\\libs\\glad\\include",
+                "C:\\Users\\nihal\\OneDrive\\Desktop\\code\\gcode-visualizer\\libs\\glfw\\include",
                 "C:/GLFW/include"
             ],
             "defines": [

@@ -12,7 +12,7 @@
                 "-g",
                 "${file}", "gl.c",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe", "-lcomdlg32", "-lglfw3", "-lglfw3dll", "-lopengl32"
+                "${fileDirname}\\${fileBasenameNoExtension}.exe", "-lcomdlg32", "-lglfw3", "-lopengl32"
             ],
             "options": {
                 "cwd": "${fileDirname}"

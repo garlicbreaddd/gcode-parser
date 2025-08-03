@@ -26,7 +26,44 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 int main() {
+    //parsing for only G0/G1/G2/G3
+            std::wstring filepath = OpenFileDialog();
+            if (filepath.empty()) {
+                std::cout<<"no file selected\n";
+                return 0;
+            }
 
+            std::string path(filepath.begin(), filepath.end());
+            std::ifstream file(path);
+            std::ofstream parsedFile("C:\\Users\\nihal\\OneDrive\\Desktop\\code\\gcode-visualizer\\parsedFile.txt");
+
+            //error handling
+            if (!parsedFile) {
+                std::cerr << "couldnt open output file";
+                return 1;
+            }
+            if (!file) {
+                std::cerr << "couldn't open file\n";
+                return 1;
+            }
+
+            std::string line;
+            while (std::getline(file,line)) {
+                std::string prefix = line.substr(0,2);
+                if (prefix == "G0" || prefix == "G1" || prefix == "G2" || prefix == "G3") {
+                    parsedFile << line;
+                    parsedFile << "\n";
+                }
+            }
+
+
+
+
+
+
+        //close files
+        file.close();
+        parsedFile.close();
     //one-time GLFW and GLAD setup code
         if (!glfwInit()) {
             std::cerr << "glfw didn't init";
@@ -64,42 +101,5 @@ int main() {
         
 
 
-    //parsing for only G0/G1/G2/G3
-        std::wstring filepath = OpenFileDialog();
-        if (filepath.empty()) {
-            std::cout<<"no file selected\n";
-            return 0;
-        }
-
-        std::string path(filepath.begin(), filepath.end());
-        std::ifstream file(path);
-        std::ofstream parsedFile("C:\\Users\\nihal\\OneDrive\\Desktop\\code\\gcode-parser\\parsedFile.txt");
-
-        //error handling
-        if (!parsedFile) {
-            std::cerr << "couldnt open output file";
-            return 1;
-        }
-        if (!file) {
-            std::cerr << "couldn't open file\n";
-            return 1;
-        }
-
-        std::string line;
-        while (std::getline(file,line)) {
-            std::string prefix = line.substr(0,2);
-            if (prefix == "G0" || prefix == "G1" || prefix == "G2" || prefix == "G3") {
-                parsedFile << line;
-                parsedFile << "\n";
-            }
-        }
-
-
-
-
-
-
-    //close files
-    file.close();
-    parsedFile.close();
+    
 }

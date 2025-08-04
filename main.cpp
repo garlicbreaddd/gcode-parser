@@ -5,6 +5,11 @@
 #include <fstream>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <regex>
+#include <sstream>
+#include <locale>
+#include <codecvt>
+
 std::wstring OpenFileDialog() {
     wchar_t filename[MAX_PATH] = L"";
 
@@ -20,51 +25,52 @@ std::wstring OpenFileDialog() {
     } else return L"";
 }
 
-
 // function updates the viewport size if user resizes window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 int main() {
     //parsing for only G0/G1/G2/G3
-            std::wstring filepath = OpenFileDialog();
-            if (filepath.empty()) {
-                std::cout<<"no file selected\n";
-                return 0;
+        std::wstring filepath = OpenFileDialog();
+        if (filepath.empty()) {
+            std::cout<<"no file selected\n";
+            return 0;
+        }
+        std::string path(filepath.begin(), filepath.end());
+
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "failed to open input file";
+            return 1;
+        }
+        
+        std::ofstream parsedFile("parsed.gcode");
+        if (!parsedFile.is_open()) {
+            std::cerr << "failed to open output file";
+            return 1;
+        }
+
+
+        std::regex gotG("^G[0-3] ");
+        std::regex semicolon(";.*$");
+        std::string line;
+        while (std::getline(file, line)) {
+            if (std::regex_search(line, gotG)) {
+                line = std::regex_replace(line, semicolon, "");
+                parsedFile << line << "\n";
             }
+            
 
-            std::string path(filepath.begin(), filepath.end());
-            std::ifstream file(path);
-            std::ofstream parsedFile("C:\\Users\\nihal\\OneDrive\\Desktop\\code\\gcode-visualizer\\parsedFile.txt");
-
-            //error handling
-            if (!parsedFile) {
-                std::cerr << "couldnt open output file";
-                return 1;
-            }
-            if (!file) {
-                std::cerr << "couldn't open file\n";
-                return 1;
-            }
-
-            std::string line;
-            while (std::getline(file,line)) {
-                std::string prefix = line.substr(0,2);
-                if (prefix == "G0" || prefix == "G1" || prefix == "G2" || prefix == "G3") {
-                    parsedFile << line;
-                    parsedFile << "\n";
-                }
-            }
+            
+        }
 
 
 
 
 
 
-        //close files
-        file.close();
-        parsedFile.close();
     //one-time GLFW and GLAD setup code
+    /*
         if (!glfwInit()) {
             std::cerr << "glfw didn't init";
             return 1;
@@ -97,7 +103,7 @@ int main() {
             glClear(GL_COLOR_BUFFER_BIT);
             glfwSwapBuffers(window);
             glfwPollEvents();
-        }
+        }*/
         
 
 

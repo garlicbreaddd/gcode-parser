@@ -6,9 +6,6 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <regex>
-#include <sstream>
-#include <locale>
-#include <codecvt>
 
 std::wstring OpenFileDialog() {
     wchar_t filename[MAX_PATH] = L"";
@@ -30,44 +27,55 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 int main() {
-    //parsing for only G0/G1/G2/G3
-        std::wstring filepath = OpenFileDialog();
-        if (filepath.empty()) {
-            std::cout<<"no file selected\n";
-            return 0;
-        }
-        std::string path(filepath.begin(), filepath.end());
+    std::wstring filepath = OpenFileDialog();
+    if (filepath.empty()) {
+        std::cout<<"no file selected\n";
+        return 0;
+    }
+    std::string path(filepath.begin(), filepath.end());
 
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            std::cerr << "failed to open input file";
-            return 1;
-        }
-        
-        std::ofstream parsedFile("parsed.gcode");
-        if (!parsedFile.is_open()) {
-            std::cerr << "failed to open output file";
-            return 1;
-        }
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        std::cerr << "failed to open input file\n";
+        return 1;
+    }
+    
+    std::ofstream parsedFile("parsed.gcode");
+    if (!parsedFile.is_open()) {
+        std::cerr << "failed to open output file\n";
+        return 1;
+    }
 
+    //parse for G commands and take out comments
+    std::regex gotG("^G[0-3] ");
+    std::regex semicolon(";.*$");
+    std::string line;
+    while (std::getline(file, line)) {
+        if (std::regex_search(line, gotG)) {
+            line = std::regex_replace(line, semicolon, "");
+            parsedFile << line << "\n";
+        }
+    }
+    parsedFile.close();
 
-        std::regex gotG("^G[0-3] ");
-        std::regex semicolon(";.*$");
-        std::string line;
-        while (std::getline(file, line)) {
-            if (std::regex_search(line, gotG)) {
-                line = std::regex_replace(line, semicolon, "");
-                parsedFile << line << "\n";
-            }
+    std::ifstream endParsedFile("parsed.gcode");
+    std::vector<float> x, y, z, e, f;
+
+    
+    while (std::getline(endParsedFile, line)) {
+        float xtopush, ytopush, ztopush;
+
+        int posX = line.find('X');
+        int posY = line.find('Y');
+        int posZ = line.find('Z');
+
+        if (posX != std::string::npos) {
+            std::string substr = line.substr(posX+1);
+            std::cout << stof(substr.substr(0, substr.find_first_not_of("-.0123456789"))) << "\n";
             
-
-            
         }
-
-
-
-
-
+    }
+    endParsedFile.close();
 
     //one-time GLFW and GLAD setup code
     /*

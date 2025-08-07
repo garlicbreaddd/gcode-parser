@@ -51,6 +51,9 @@
         "vector": "cpp",
         "xlocbuf": "cpp",
         "xlocmon": "cpp",
-        "xloctime": "cpp"
-    }
+        "xloctime": "cpp",
+        "codecvt": "cpp",
+        "sstream": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }

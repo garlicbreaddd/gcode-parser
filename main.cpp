@@ -6,6 +6,7 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <regex>
+#include <variant>
 
 std::wstring OpenFileDialog() {
     wchar_t filename[MAX_PATH] = L"";
@@ -20,6 +21,33 @@ std::wstring OpenFileDialog() {
     if (GetOpenFileNameW(&ofn)) {
         return std::wstring(filename);
     } else return L"";
+}
+
+struct Point {
+    float x,y,z;
+};
+
+struct Linearmove {
+    Point endpos;
+};
+struct Arcmove {
+    Point endpos;
+    float i, j;
+    bool isclockwise;
+};
+
+void PrintMove(const Linearmove& move) {
+    std::cout << "LINEAR MOVE: ";
+    std::cout << "End=(" << move.endpos.x << ", " << move.endpos.y << ", " << move.endpos.z << ") ";
+    std::cout << "\n";
+}
+
+void PrintMove(const Arcmove& move) {
+    std::cout << "ARC MOVE: ";
+    std::cout << "End=(" << move.endpos.x << ", " << move.endpos.y << ", " << move.endpos.z << ") ";
+    std::cout << "X-offset for arc: " << move.i << " Y-offset for arc: " << move.j << ((move.isclockwise) ? "clockwise" : "counterclock");
+    std::cout << "\n";
+
 }
 
 // function updates the viewport size if user resizes window
@@ -59,24 +87,60 @@ int main() {
     parsedFile.close();
 
     std::ifstream endParsedFile("parsed.gcode");
-    std::vector<float> x, y, z, e, f;
 
-    
+    using gcodemoves = std::variant<Linearmove, Arcmove>;
+
+    std::vector<gcodemoves> allmoves;
+
+    float xtopush = 0;
+    float ytopush = 0;
+    float ztopush = 0;
+    float itopush = 0;
+    float jtopush = 0;
     while (std::getline(endParsedFile, line)) {
-        float xtopush, ytopush, ztopush;
 
         int posX = line.find('X');
         int posY = line.find('Y');
         int posZ = line.find('Z');
+        int posI = line.find('I');
+        int posJ = line.find('J');
 
         if (posX != std::string::npos) {
             std::string substr = line.substr(posX+1);
-            std::cout << stof(substr.substr(0, substr.find_first_not_of("-.0123456789"))) << "\n";
-            
+            xtopush = stof(substr.substr(0, substr.find_first_not_of("-.0123456789")));
+        }
+        if (posY != std::string::npos) {
+            std::string substr = line.substr(posY+1);
+            ytopush = stof(substr.substr(0, substr.find_first_not_of("-.0123456789")));
+        }
+        if (posZ != std::string::npos) {
+            std::string substr = line.substr(posZ+1);
+            ztopush = stof(substr.substr(0, substr.find_first_not_of("-.0123456789")));
+        }
+        if (posI != std::string::npos) {
+            std::string substr = line.substr(posI+1);
+            itopush = stof(substr.substr(0, substr.find_first_not_of("-.0123456789")));
+        }
+        if (posJ != std::string::npos) {
+            std::string substr = line.substr(posJ+1);
+            jtopush = stof(substr.substr(0, substr.find_first_not_of("-.0123456789")));
+        }
+        if (line.substr(0,2) == "G0" || line.substr(0,2) == "G1") {
+            allmoves.push_back(Linearmove{{xtopush, ytopush, ztopush}});
+        }
+        if (line.substr(0,2) == "G2") {
+            allmoves.push_back(Arcmove{{xtopush, ytopush, ztopush}, itopush, jtopush, true});
+        } else if (line.substr(0,2) == "G3") {
+            allmoves.push_back(Arcmove{{xtopush, ytopush, ztopush}, itopush, jtopush, false});
         }
     }
     endParsedFile.close();
 
+
+    for (const auto& move : allmoves) {
+        std::visit([](const auto& m) {PrintMove(m);}, move);
+
+    }
     //one-time GLFW and GLAD setup code
     /*
         if (!glfwInit()) {
